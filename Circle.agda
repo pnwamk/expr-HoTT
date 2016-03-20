@@ -23,11 +23,13 @@ pathInd : ∀ {u ℓ} → {A : Set u} →
           ({x y : A} (p : x ≡ y) → C p)
 pathInd C c (refl x) = c x
 
---
 
+
+-- inverse paths
 ! : ∀ {u} → {A : Set u} {x y : A} → (x ≡ y) → (y ≡ x)
 ! = pathInd (λ {x} {y} _ → y ≡ x) refl
 
+-- path composition
 _∘_ : ∀ {u} → {A : Set u} → {x y z : A} → (x ≡ y) → (y ≡ z) → (x ≡ z)
 _∘_ {u} {A} {x} {y} {z} p q = 
   pathInd {u}
@@ -35,15 +37,15 @@ _∘_ {u} {A} {x} {y} {z} p q =
     (λ x z q → pathInd (λ {x} {z} _ → x ≡ z) refl {x} {z} q)
     {x} {y} p z q
 
---
-
-unitTransR : {A : Set} {x y : A} → (p : x ≡ y) → (p ≡ p ∘ refl y) 
+-- (x ≡ y) ≡ ((x ≡ y) ∘ (refl y))
+unitTransR : {A : Set} {x y : A} → (p : x ≡ y) → (p ≡ (p ∘ refl y)) 
 unitTransR {A} {x} {y} p = 
   pathInd
-    (λ {x} {y} p → p ≡ p ∘ (refl y)) 
+    (λ {x} {y} p → p ≡ (p ∘ (refl y))) 
     (λ x → refl (refl x))
     {x} {y} p 
 
+-- (x ≡ y) ≡ ((refl x) ∘ (x ≡ y))
 unitTransL : {A : Set} {x y : A} → (p : x ≡ y) → (p ≡ refl x ∘ p) 
 unitTransL {A} {x} {y} p = 
   pathInd
@@ -51,6 +53,7 @@ unitTransL {A} {x} {y} p =
     (λ x → refl (refl x))
     {x} {y} p 
 
+-- !(x ≡ y) ∘ (x ≡ y)  ≡ (refl y)
 invTransL : {A : Set} {x y : A} → (p : x ≡ y) → (! p ∘ p ≡ refl y)
 invTransL {A} {x} {y} p = 
   pathInd 
@@ -58,6 +61,7 @@ invTransL {A} {x} {y} p =
     (λ x → refl (refl x))
     {x} {y} p
 
+--  (x ≡ y) ∘ !(x ≡ y)  ≡ (refl x)
 invTransR : ∀ {ℓ} {A : Set ℓ} {x y : A} → (p : x ≡ y) → (p ∘ ! p ≡ refl x)
 invTransR {ℓ} {A} {x} {y} p = 
   pathInd
@@ -65,6 +69,7 @@ invTransR {ℓ} {A} {x} {y} p =
     (λ x → refl (refl x))
     {x} {y} p
 
+-- !!(x ≡ y) ≡ (x ≡ y)
 invId : {A : Set} {x y : A} → (p : x ≡ y) → (! (! p) ≡ p)
 invId {A} {x} {y} p =
   pathInd 
@@ -72,6 +77,7 @@ invId {A} {x} {y} p =
     (λ x → refl (refl x))
     {x} {y} p
 
+-- (x ≡ y) and (y ≡ z) ⇒ (x ≡ z)
 assocP : {A : Set} {x y z w : A} → (p : x ≡ y) → (q : y ≡ z) → (r : z ≡ w) →
          (p ∘ (q ∘ r) ≡ (p ∘ q) ∘ r)
 assocP {A} {x} {y} {z} {w} p q r =
@@ -92,6 +98,7 @@ assocP {A} {x} {y} {z} {w} p q r =
         {x} {z} q w r)
     {x} {y} p z w q r
 
+-- !(p ∘ q) ≡ !q ∘ !p
 invComp : {A : Set} {x y z : A} → (p : x ≡ y) → (q : y ≡ z) → 
           ! (p ∘ q) ≡ ! q ∘ ! p
 invComp {A} {x} {y} {z} p q = 
@@ -104,8 +111,8 @@ invComp {A} {x} {y} {z} p q =
         {x} {z} q)
     {x} {y} p z q
 
---
 
+-- (x ≡ y) ⇒ (f x) ≡ (f y)
 ap : ∀ {ℓ ℓ'} → {A : Set ℓ} {B : Set ℓ'} {x y : A} → 
      (f : A → B) → (x ≡ y) → (f x ≡ f y)
 ap {ℓ} {ℓ'} {A} {B} {x} {y} f p = 
@@ -114,6 +121,8 @@ ap {ℓ} {ℓ'} {A} {B} {x} {y} f p =
     (λ x → refl (f x))
     {x} {y} p
 
+-- sort of
+-- p:(x ≡ y) ⇒ q:(y ≡ z) ⇒ (((f x) ≡ (f z)) ≡ (((f x) ≡ (f y)) ∘ ((f y) ≡ (f z))))
 apfTrans : ∀ {u} → {A B : Set u} {x y z : A} → 
   (f : A → B) → (p : x ≡ y) → (q : y ≡ z) → ap f (p ∘ q) ≡ (ap f p) ∘ (ap f q)
 apfTrans {u} {A} {B} {x} {y} {z} f p q = 
@@ -128,6 +137,7 @@ apfTrans {u} {A} {B} {x} {y} {z} f p q =
         {x} {z} q)
     {x} {y} p z q
 
+-- ap f (! p) ≡ ! (ap f p)
 apfInv : ∀ {u} → {A B : Set u} {x y : A} → (f : A → B) → (p : x ≡ y) → 
          ap f (! p) ≡ ! (ap f p) 
 apfInv {u} {A} {B} {x} {y} f p =
@@ -136,6 +146,7 @@ apfInv {u} {A} {B} {x} {y} f p =
     (λ x → refl (ap f (refl x)))
     {x} {y} p
 
+-- ap g (ap f p) ≡ ap (g ○ f) p
 apfComp : {A B C : Set} {x y : A} → (f : A → B) → (g : B → C) → (p : x ≡ y) → 
           ap g (ap f p) ≡ ap (g ○ f) p 
 apfComp {A} {B} {C} {x} {y} f g p =
@@ -144,6 +155,7 @@ apfComp {A} {B} {C} {x} {y} f g p =
     (λ x → refl (ap g (ap f (refl x))))
     {x} {y} p
 
+--  ap id p ≡ p
 apfId : {A : Set} {x y : A} → (p : x ≡ y) → ap id p ≡ p
 apfId {A} {x} {y} p = 
   pathInd 
@@ -151,8 +163,7 @@ apfId {A} {x} {y} p =
     (λ x → refl (refl x))
     {x} {y} p
 
---
-
+--  (x ≡ y) → P x → P y
 transport : ∀ {ℓ ℓ'} → {A : Set ℓ} {x y : A} → 
   (P : A → Set ℓ') → (p : x ≡ y) → P x → P y
 transport {ℓ} {ℓ'} {A} {x} {y} P p = 
@@ -161,6 +172,7 @@ transport {ℓ} {ℓ'} {A} {x} {y} P p =
     (λ _ → id)
     {x} {y} p
 
+-- dependent ap
 apd : ∀ {ℓ ℓ'} → {A : Set ℓ} {B : A → Set ℓ'} {x y : A} → (f : (a : A) → B a) → 
   (p : x ≡ y) → (transport B p (f x) ≡ f y)
 apd {ℓ} {ℓ'} {A} {B} {x} {y} f p = 
@@ -292,11 +304,23 @@ module Circle2 where
 
 open Circle2 public
 
+Smap : S¹ → S¹'
+Smap s' = recS¹ south (west ∘ (! east)) s'
+
+S'map : S¹' → S¹
+S'map s = recS¹' {C = S¹} base base loop (! loop) s
+
+Sqinv : qinv Smap
+Sqinv = mkqinv S'map
+               (λ s' → {!!})
+               (λ s → {!!})
+
 sequiv : S¹ ≃ S¹'
-sequiv = {!!}
+sequiv = (Smap , equiv₁ Sqinv)
 
 spath : S¹ ≡ S¹'
 spath with univalence 
 ... | (_ , eq) = isequiv.g eq sequiv
 
 ------------------------------------------------------------------------------
+
