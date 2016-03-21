@@ -5,6 +5,8 @@ module Circle where
 open import Level using (_⊔_)
 open import Data.Product using (Σ; _,_)
 open import Function renaming (_∘_ to _○_)
+--open import Relation.Binary.PropositionalEquality using (_≡_)
+--open import Relation.Binary.EqReasoning
 
 infixr 8  _∘_     -- path composition
 infix  4  _≡_     -- propositional equality
@@ -305,22 +307,59 @@ module Circle2 where
 open Circle2 public
 
 Smap : S¹ → S¹'
-Smap s' = recS¹ south (west ∘ (! east)) s'
+Smap s = recS¹ south (west ∘ (! east)) s
 
 S'map : S¹' → S¹
-S'map s = recS¹' {C = S¹} base base loop (! loop) s
+S'map s = recS¹' {C = S¹} base base loop (refl base) s
+
+S'toS : S¹' -> Set
+S'toS = (λ s' → (Smap ○ S'map) s' ≡ id s')
+
+StoS' : S¹ -> Set
+StoS' = (λ s → (S'map ○ Smap) s ≡ id s)
+
+W : (Smap ○ S'map) north ≡ id north
+W = transport S'toS west (refl south)
+
+--LemmaE transport (λ z → z ≡ z) east (refl south) ≡ refl north
+LemmaW = apd {A = S¹'} {x = south} {y = north} S'toS east
+
+Lemma = transport S'toS west (refl south)
+
+-- transport S'toS east (refl south)
+
+--WStoN : transport S'toS west (refl south) ≡ (refl north)
+-- apd : ∀ {ℓ ℓ'} → {A : Set ℓ} {B : A → Set ℓ'} {x y : A} → (f : (a : A) → B a) → 
+--  (p : x ≡ y) → (transport B p (f x) ≡ f y)
 
 Sqinv : qinv Smap
 Sqinv = mkqinv S'map
-               (λ s' → {!!})
-               (λ s → {!!})
+               -- P(s') = (Smap ○ S'map) s' ≡ id s'
+               (indS¹'
+                 {C = S'toS} -- P
+                 (refl south) -- P(south)
+                 (transport S'toS east (refl south)) -- P(north)
+                 (refl (transport S'toS east (refl south))) -- P(south) --east--> P(north)
+                 -- P(south) --west--> P(north)
+                 -- transport S'toS west (refl south)
+                 -- ≡
+                 -- transport S'toS east (refl south))
+                 --  
+                 --  {x y : A} → (f : (a : A) → B a) → 
+                 --  (p : x ≡ y) → (transport B p (f x) ≡ f y)
+                 {!!}
+                            )
+               -- P(s) = (S'map ○ Smap) s ≡ id s
+               (indS¹
+                 {C = (λ s → (S'map ○ Smap) s ≡ id s)} -- P
+                 (refl base) -- P(base)
+                 -- P()
+                 {!!})
+--sequiv : S¹ ≃ S¹'
+--sequiv = (Smap , equiv₁ Sqinv)
 
-sequiv : S¹ ≃ S¹'
-sequiv = (Smap , equiv₁ Sqinv)
-
-spath : S¹ ≡ S¹'
-spath with univalence 
-... | (_ , eq) = isequiv.g eq sequiv
+--spath : S¹ ≡ S¹'
+--spath with univalence 
+--... | (_ , eq) = isequiv.g eq sequiv
 
 ------------------------------------------------------------------------------
-
