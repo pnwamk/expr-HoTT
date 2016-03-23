@@ -7,9 +7,13 @@ open import Data.Product using (Σ; _,_)
 open import Function renaming (_∘_ to _○_)
 
 infixr 8  _∘_     -- path composition
+infixr 8  _⋆_     -- horizontal path composition
 infix  4  _≡_     -- propositional equality
 infix  4  _∼_     -- homotopy between two functions 
 infix  4  _≃_     -- type of equivalences
+-- macros from tzaikin for equational rewriting over non-standard ≡
+infixr 4 _≡⟨_⟩_ 
+infix 4  _∎ 
 
 ------------------------------------------------------------------------------
 -- A few HoTT primitives
@@ -35,17 +39,25 @@ _∘_ {u} {A} {x} {y} {z} p q =
     (λ x z q → pathInd (λ {x} {z} _ → x ≡ z) refl {x} {z} q)
     {x} {y} p z q
 
+-- Handy "macros" (from tzaikin)
+_∎ : {A : Set} → (p : A) → p ≡ p
+p ∎ = refl p
+
+_≡⟨_⟩_ : {A : Set} → {q r : A} → (p : A) → p ≡ q → q ≡ r → p ≡ r
+p ≡⟨ α ⟩ β = α ∘ β
+
+
 --
 
-unitTransR : {A : Set} {x y : A} → (p : x ≡ y) → (p ≡ p ∘ refl y) 
-unitTransR {A} {x} {y} p = 
+RU : {A : Set} {x y : A} → (p : x ≡ y) → (p ≡ p ∘ refl y) 
+RU {A} {x} {y} p = 
   pathInd
     (λ {x} {y} p → p ≡ p ∘ (refl y)) 
     (λ x → refl (refl x))
     {x} {y} p 
 
-unitTransL : {A : Set} {x y : A} → (p : x ≡ y) → (p ≡ refl x ∘ p) 
-unitTransL {A} {x} {y} p = 
+LU : {A : Set} {x y : A} → (p : x ≡ y) → (p ≡ refl x ∘ p) 
+LU {A} {x} {y} p = 
   pathInd
     (λ {x} {y} p → p ≡ (refl x) ∘ p)
     (λ x → refl (refl x))
@@ -204,19 +216,167 @@ postulate
 ------------------------------------------------------------------------------
 -- Path and loop spaces
 
-1-Paths : (A : Set) → {a b : A} → Set
-1-Paths A {a} {b} = (a ≡ b)
+1-Path : {A : Set} → (a b : A) → Set
+1-Path {A} a b = (a ≡ b)
 
-2-Paths : (A : Set) → {a b : A} {p q : 1-Paths A {a} {b}} → Set
-2-Paths A {a} {b} {p} {q} = (p ≡ q)
+2-Path : {A : Set} → (a b : A) (p q : 1-Path {A} a b) → Set
+2-Path {A} a b p q = (p ≡ q)
 
 Ω : (A : Set) → {a : A} → Set
-Ω A {a} = 1-Paths A {a} {a}
+Ω A {a} = 1-Path {A} a a
 
 Ω² : (A : Set) → {a : A} → Set
-Ω² A {a} = 2-Paths A {a} {a} {refl a} {refl a}
+Ω² A {a} = 2-Path {A} a a (refl a) (refl a)
 
-eckmann-hilton : {A : Set} {a : A} (α β : Ω² A {a}) → α ∘ β ≡ β ∘ α 
-eckmann-hilton {A} {a} α β = {!!}
+-- Whiskering Lemmas
+--     ___ p ___     ___ r ___
+--   /           \ /           \
+--  a     α⇓      b     β⇓     c
+--   \           / \           /
+--     --- q ---     --- s ---
 
+wskR : {A : Set}
+           {a b c : A}
+           {p q : 1-Path {A} a b} →
+           (α : 2-Path {A} a b p q) →
+           (r : 1-Path {A} b c) → 
+           (p ∘ r) ≡ (q ∘ r)
+wskR {A} {a} {b} {c} {p} {q} α r = 
+         (pathInd (λ {b} {c} r →
+                     {p q : a ≡ b} →
+                     (α : p ≡ q) →
+                     2-Path {A} a c (p ∘ r) (q ∘ r))
+                  (λ b {p} {q} α →
+                    (p ∘ refl b) ≡⟨ ! (RU p) ⟩
+                    p ≡⟨ α ⟩
+                    q ≡⟨ RU q ⟩
+                    (q ∘ refl b) ∎)
+                 r)
+                 α
+
+wskL : {A : Set}
+           {a b c : A}
+           {r s : 1-Path {A} b c} →
+           (q : 1-Path {A} a b) →
+           (β : 2-Path {A} b c r s) →
+           (q ∘ r) ≡ (q ∘ s)
+wskL {A} {a} {b} {c} {r} {s} q β = 
+  (pathInd (λ {a} {b} q →
+              {r s : b ≡ c} →
+              (α : r ≡ s) →
+              2-Path {A} a c (q ∘ r) (q ∘ s))
+           ((λ b {p} {q} β →
+               (refl b ∘ p) ≡⟨ ! (LU p) ⟩
+               p ≡⟨ β ⟩
+               q ≡⟨ LU q ⟩
+               (refl b ∘ q) ∎))
+           q)
+           β
+
+_⋆_ : {A : Set}
+      {a b c : A} 
+      {p q : 1-Path {A} a b}
+      {r s : 1-Path {A} b c}
+      (α : 2-Path {A} a b p q) → 
+      (β : 2-Path {A} b c r s) → 
+      (p ∘ r) ≡ (q ∘ s)
+_⋆_ {A} {a} {b} {c} {p} {q} {r} {s} α β = (wskR α r) ∘ (wskL q β)
+
+
+
+Hcomp→compR1 : {A : Set}
+              {a : A}
+              (α : 2-Path {A} a a (refl a) (refl a)) →
+              (wskR α (refl a)) ≡ (! (RU (refl a))) ∘ α ∘ (RU (refl a))
+Hcomp→compR1 {A} {a} α = refl
+                          (pathInd (λ {x} {y} _ → x ≡ y) refl
+                           (pathInd (λ {x} {y} _ → (x₁ : a ≡ a) (x₂ : y ≡ x₁) → x ≡ x₁)
+                            (λ x x₁ → pathInd (λ {x₂} {y} _ → x₂ ≡ y) refl) α (refl a)
+                            (refl (refl a))))
+
+
+Hcomp→compL1 : {A : Set}
+              {a : A}
+              (β : 2-Path {A} a a (refl a) (refl a)) →
+              (wskL (refl a) β) ≡ (! (LU (refl a))) ∘ β ∘ (LU (refl a))
+Hcomp→compL1 {A} {a} β = refl
+                           (pathInd (λ {x} {y} _ → x ≡ y) refl
+                            (pathInd (λ {x} {y} _ → (x₁ : a ≡ a) (x₂ : y ≡ x₁) → x ≡ x₁)
+                             (λ x x₁ → pathInd (λ {x₂} {y} _ → x₂ ≡ y) refl) β (refl a)
+                             (refl (refl a))))
+
+
+comp-eqL : {A : Set}
+           {a b c : A}
+           {p : 1-Path {A} a b} →
+           (p' : 1-Path {A} a b) →
+           (q : 1-Path {A} b c) →
+           (eq : p ≡ p') →
+           p ∘ q ≡ p' ∘ q
+comp-eqL {A} {a} {b} {c} {p} p' q eq =
+   transport (λ p' → p ∘ q ≡ p' ∘ q) eq (refl (p ∘ q))
+           
+comp-eqR : {A : Set}
+           {a b c : A}
+           {q : 1-Path {A} b c}
+           (p : 1-Path {A} a b) →
+           (q' : 1-Path {A} b c) →
+           (eq : q ≡ q') →
+           p ∘ q ≡ p ∘ q'
+comp-eqR {A} {a} {b} {c} {q} p q' eq =
+   transport (λ q' → p ∘ q ≡ p ∘ q') eq (refl (p ∘ q))
+
+
+
+Hcomp≡comp : {A : Set}
+             {a : A}
+             (α : 2-Path {A} a a (refl a) (refl a)) →
+             (β : 2-Path {A} a a (refl a) (refl a)) →
+             α ⋆ β ≡ α ∘ β
+Hcomp≡comp {A} {a} α β =
+  α ⋆ β
+  ≡⟨ refl (α ⋆ β) ⟩
+  (wskR α r) ∘ (wskL r β)
+  ≡⟨ comp-eqL ((! (RU r)) ∘ α ∘ (RU r)) -- todo maybe just inline def now?
+               (wskL r β)
+               (Hcomp→compR1 α) ⟩
+  ((! (RU r)) ∘ α ∘ (RU r)) ∘ (wskL r β)
+  ≡⟨  comp-eqR ((! (RU r)) ∘ α ∘ (RU r))
+               ((! (LU r)) ∘ β ∘ (LU r))
+               (Hcomp→compR1 β) ⟩
+  ((! (RU r)) ∘ α ∘ (RU r)) ∘ ((! (LU r)) ∘ β ∘ (LU r))
+  ≡⟨ {!!} ⟩
+  α ∘ β ∎
+  where r = (refl a)
+
+
+_⋆'_ : {A : Set}
+       {a b c : A} 
+       {p q : 1-Path {A} a b}
+       {r s : 1-Path {A} b c}
+       (α : 2-Path {A} a b p q) → 
+       (β : 2-Path {A} b c r s) → 
+       (p ∘ r) ≡ (q ∘ s)
+_⋆'_ {A} {a} {b} {c} {p} {q} {r} {s} α β = (wskL p β) ∘ (wskR α s)
+
+Hcomp'≡comp : {A : Set}
+              {a : A}
+              (α : 2-Path {A} a a (refl a) (refl a)) →
+              (β : 2-Path {A} a a (refl a) (refl a)) →
+              α ⋆' β ≡ β ∘ α
+Hcomp'≡comp {A} {a} α β = {!!}
+
+
+Hcomp≡Hcomp' : {A : Set}
+               {a b c : A} 
+               {p q : 1-Path {A} a b}
+               {r s : 1-Path {A} b c}
+               (α : 2-Path {A} a b p q) → 
+               (β : 2-Path {A} b c r s) → 
+               α ⋆ β ≡ α ⋆' β
+Hcomp≡Hcomp' = {!!}
+
+postulate
+  eckmann-hilton : {A : Set} {a : A} (α β : Ω² A {a}) → α ∘ β ≡ β ∘ α 
+--eckmann-hilton {A} {a} α β = {!!}
 ------------------------------------------------------------------------------

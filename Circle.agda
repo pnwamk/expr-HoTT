@@ -5,13 +5,16 @@ module Circle where
 open import Level using (_⊔_)
 open import Data.Product using (Σ; _,_)
 open import Function renaming (_∘_ to _○_)
---open import Relation.Binary.PropositionalEquality using (_≡_)
+--open import Relation.Binary.PropositionalEquality renaming (_≡_ to _≡_; refl to Eqrefl)
 --open import Relation.Binary.EqReasoning
 
 infixr 8  _∘_     -- path composition
 infix  4  _≡_     -- propositional equality
 infix  4  _∼_     -- homotopy between two functions 
 infix  4  _≃_     -- type of equivalences
+-- macros from tzaikin for equational rewriting over non-standard ≡
+infixr 4 _≡⟨_⟩_ 
+infix 4  _∎ 
 
 ------------------------------------------------------------------------------
 -- A few HoTT primitives
@@ -38,6 +41,14 @@ _∘_ {u} {A} {x} {y} {z} p q =
     (λ {x} {y} p → ((z : A) → (q : y ≡ z) → (x ≡ z)))
     (λ x z q → pathInd (λ {x} {z} _ → x ≡ z) refl {x} {z} q)
     {x} {y} p z q
+
+-- Handy "macros" (from tzaikin)
+_∎ : {A : Set} → (p : A) → p ≡ p
+p ∎ = refl p
+
+_≡⟨_⟩_ : {A : Set} → {q r : A} → (p : A) → p ≡ q → q ≡ r → p ≡ r
+p ≡⟨ α ⟩ β = α ∘ β
+
 
 -- (x ≡ y) ≡ ((x ≡ y) ∘ (refl y))
 unitTransR : {A : Set} {x y : A} → (p : x ≡ y) → (p ≡ (p ∘ refl y)) 
@@ -310,56 +321,37 @@ Smap : S¹ → S¹'
 Smap s = recS¹ south (west ∘ (! east)) s
 
 S'map : S¹' → S¹
-S'map s = recS¹' {C = S¹} base base loop (refl base) s
+S'map s = recS¹' {C = S¹} base base (refl base) loop s
 
-S'toS : S¹' -> Set
-S'toS = (λ s' → (Smap ○ S'map) s' ≡ id s')
+S'toS≡id : S¹' -> Set
+S'toS≡id = (λ s' → (Smap ○ S'map) s' ≡ id s')
 
-StoS' : S¹ -> Set
-StoS' = (λ s → (S'map ○ Smap) s ≡ id s)
+StoS'≡id : S¹ -> Set
+StoS'≡id = (λ s → (S'map ○ Smap) s ≡ id s)
 
-W : (Smap ○ S'map) north ≡ id north
-W = transport S'toS west (refl south)
-
---LemmaE transport (λ z → z ≡ z) east (refl south) ≡ refl north
-LemmaW = apd {A = S¹'} {x = south} {y = north} S'toS east
-
-Lemma = transport S'toS west (refl south)
-
--- transport S'toS east (refl south)
-
---WStoN : transport S'toS west (refl south) ≡ (refl north)
--- apd : ∀ {ℓ ℓ'} → {A : Set ℓ} {B : A → Set ℓ'} {x y : A} → (f : (a : A) → B a) → 
---  (p : x ≡ y) → (transport B p (f x) ≡ f y)
 
 Sqinv : qinv Smap
 Sqinv = mkqinv S'map
                -- P(s') = (Smap ○ S'map) s' ≡ id s'
                (indS¹'
-                 {C = S'toS} -- P
-                 (refl south) -- P(south)
-                 (transport S'toS east (refl south)) -- P(north)
-                 (refl (transport S'toS east (refl south))) -- P(south) --east--> P(north)
-                 -- P(south) --west--> P(north)
-                 -- transport S'toS west (refl south)
-                 -- ≡
-                 -- transport S'toS east (refl south))
-                 --  
-                 --  {x y : A} → (f : (a : A) → B a) → 
-                 --  (p : x ≡ y) → (transport B p (f x) ≡ f y)
-                 {!!}
-                            )
+                 {C = S'toS≡id}
+                 (refl south)
+                 (transport S'toS≡id east (refl south))
+                 ((refl (transport S'toS≡id east (refl south))))
+                 (transport S'toS≡id west (refl south) ≡⟨ {!!} ⟩
+                  transport S'toS≡id east (refl south) ∎))
                -- P(s) = (S'map ○ Smap) s ≡ id s
                (indS¹
                  {C = (λ s → (S'map ○ Smap) s ≡ id s)} -- P
                  (refl base) -- P(base)
                  -- P()
-                 {!!})
---sequiv : S¹ ≃ S¹'
---sequiv = (Smap , equiv₁ Sqinv)
+                 (transport StoS'≡id loop (refl base) ≡⟨ {!!} ⟩
+                  refl base ∎))
+sequiv : S¹ ≃ S¹'
+sequiv = (Smap , equiv₁ Sqinv)
 
---spath : S¹ ≡ S¹'
---spath with univalence 
---... | (_ , eq) = isequiv.g eq sequiv
+spath : S¹ ≡ S¹'
+spath with univalence 
+... | (_ , eq) = isequiv.g eq sequiv
 
 ------------------------------------------------------------------------------
