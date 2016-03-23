@@ -305,27 +305,15 @@ Hcomp→compL1 {A} {a} β = refl
                              (λ x x₁ → pathInd (λ {x₂} {y} _ → x₂ ≡ y) refl) β (refl a)
                              (refl (refl a))))
 
+RU≡refl : {A : Set}
+          (a : A) →
+          (RU (refl a)) ≡ (refl (refl a))
+RU≡refl = λ {A} a → refl (refl (refl a))
 
-comp-eqL : {A : Set}
-           {a b c : A}
-           {p : 1-Path {A} a b} →
-           (p' : 1-Path {A} a b) →
-           (q : 1-Path {A} b c) →
-           (eq : p ≡ p') →
-           p ∘ q ≡ p' ∘ q
-comp-eqL {A} {a} {b} {c} {p} p' q eq =
-   transport (λ p' → p ∘ q ≡ p' ∘ q) eq (refl (p ∘ q))
-           
-comp-eqR : {A : Set}
-           {a b c : A}
-           {q : 1-Path {A} b c}
-           (p : 1-Path {A} a b) →
-           (q' : 1-Path {A} b c) →
-           (eq : q ≡ q') →
-           p ∘ q ≡ p ∘ q'
-comp-eqR {A} {a} {b} {c} {q} p q' eq =
-   transport (λ q' → p ∘ q ≡ p ∘ q') eq (refl (p ∘ q))
-
+LU≡refl : {A : Set}
+          (a : A) →
+          (LU (refl a)) ≡ (refl (refl a))
+LU≡refl = λ {A} a → refl (refl (refl a))
 
 
 Hcomp≡comp : {A : Set}
@@ -334,20 +322,46 @@ Hcomp≡comp : {A : Set}
              (β : 2-Path {A} a a (refl a) (refl a)) →
              α ⋆ β ≡ α ∘ β
 Hcomp≡comp {A} {a} α β =
-  α ⋆ β
+
+  α ⋆ β -- rewrite to whiskers
+
   ≡⟨ refl (α ⋆ β) ⟩
-  (wskR α r) ∘ (wskL r β)
-  ≡⟨ comp-eqL ((! (RU r)) ∘ α ∘ (RU r)) -- todo maybe just inline def now?
-               (wskL r β)
-               (Hcomp→compR1 α) ⟩
-  ((! (RU r)) ∘ α ∘ (RU r)) ∘ (wskL r β)
-  ≡⟨  comp-eqR ((! (RU r)) ∘ α ∘ (RU r))
-               ((! (LU r)) ∘ β ∘ (LU r))
-               (Hcomp→compR1 β) ⟩
-  ((! (RU r)) ∘ α ∘ (RU r)) ∘ ((! (LU r)) ∘ β ∘ (LU r))
-  ≡⟨ {!!} ⟩
+
+  (wskR α ra) ∘ (wskL ra β) -- rewrite (wskR α ra)
+
+  ≡⟨ transport (λ p → p ∘ (wskL ra β) ≡ (!(RU ra) ∘ α ∘ (RU ra)) ∘ (wskL ra β))
+               (Hcomp→compR1 α)
+               (refl ((wskR α ra) ∘ (wskL ra β)))⟩
+               
+  (!(RU ra) ∘ α ∘ (RU ra)) ∘ (wskL ra β)  -- rewrite (wskL ra β)
+  
+  ≡⟨  transport (λ q → (!(RU ra) ∘ α ∘ (RU ra)) ∘ q
+                       ≡
+                       (!(RU ra)  ∘ α ∘ (RU ra)) ∘ (!(LU ra) ∘ β ∘ (LU ra)))
+               (Hcomp→compL1 β)
+               (refl ((!(RU ra) ∘ α ∘ (RU ra)) ∘ (wskL ra β))) ⟩
+
+  (!(RU ra) ∘ α ∘ (RU ra)) ∘ (!(LU ra) ∘ β ∘ (LU ra)) -- rewrite (RU ra) to refl ra
+  
+  ≡⟨ transport (λ p → (! p ∘ α ∘ p) ∘ (!(LU ra) ∘ β ∘ (LU ra))
+                       ≡
+                       (!(refl ra) ∘ α ∘ (refl ra)) ∘ (!(LU ra) ∘ β ∘ (LU ra)))
+                (RU≡refl a)
+                (refl ((!(RU ra) ∘ α ∘ (RU ra)) ∘ (!(LU ra) ∘ β ∘ (LU ra)))) ⟩
+
+  (!(refl ra) ∘ α ∘ (refl ra)) ∘ (!(LU ra) ∘ β ∘ (LU ra))
+  
+  ≡⟨ transport (λ q → (!(refl ra) ∘ α ∘ (refl ra)) ∘ (! q ∘ β ∘ q)
+                      ≡
+                      (!(refl ra) ∘ α ∘ (refl ra)) ∘ (!(refl ra) ∘ β ∘ (refl ra)))
+                (LU≡refl a)
+                (refl ((!(refl ra) ∘ α ∘ (refl ra)) ∘ (!(LU ra) ∘ β ∘ (LU ra)))) ⟩
+
+  (!(refl ra) ∘ α ∘ (refl ra)) ∘ (!(refl ra) ∘ β ∘ (refl ra))
+
+  ≡⟨ {!!} ⟩ -- bookmark
   α ∘ β ∎
-  where r = (refl a)
+  where ra = (refl a)
 
 
 _⋆'_ : {A : Set}
