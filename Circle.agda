@@ -43,7 +43,6 @@ pathInd : ∀ {u ℓ} → {A : Set u} →
 pathInd C c (refl x) = c x
 
 
-
 -- inverse paths
 ! : ∀ {u} → {A : Set u} {x y : A} → (x ≡ y) → (y ≡ x)
 ! = pathInd (λ {x} {y} _ → y ≡ x) refl
@@ -363,9 +362,9 @@ Sqinv = mkqinv S'map
                  {C = (λ s → (S'map ○ Smap) s ≡ id s)} -- P
                  (refl base) -- P(base)
                  -- P()
-                 (transport StoS'≡id loop (refl base) ≡⟨ {!!} ⟩
-                  refl base ∎))
-sequiv : S¹ ≃ S¹'
+                 (transport StoS'≡id loop (refl base) ≡⟨ {!!} ⟩ -- needs Thm 2.11.3, transportId
+                  refl base ∎)) -- ap E x≡y where E is a context allows you to rewrite
+sequiv : S¹ ≃ S¹'               -- any E[x] to E[y]
 sequiv = (Smap , equiv₁ Sqinv)
 
 spath : S¹ ≡ S¹'

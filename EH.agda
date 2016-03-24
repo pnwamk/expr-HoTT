@@ -317,92 +317,41 @@ Hcomp→compL1 {A} {a} β = refl
                              (λ x x₁ → pathInd (λ {x₂} {y} _ → x₂ ≡ y) refl) β (refl a)
                              (refl (refl a))))
 
-inv-rra-elim : {A : Set}
-               (a : A) → 
-               (! (refl (refl a))) ≡ (refl (refl a))
-inv-rra-elim {A} a =  refl (refl (refl a))
-
 -- proof from pg 81
-Hcomp≡comp : {A : Set}
+α⋆β≡α∘β : {A : Set}
              {a : A}
              (α : 2-Path {A} a a (refl a) (refl a)) →
              (β : 2-Path {A} a a (refl a) (refl a)) →
              α ⋆ β ≡ α ∘ β
-Hcomp≡comp {A} {a} α β =
+α⋆β≡α∘β {A} {a} α β =
 
-  α ⋆ β -- rewrite to whiskers
+  α ⋆ β
 
   ≡⟨ refl (α ⋆ β) ⟩
 
-  (wskR α ra) ∘ (wskL ra β) -- rewrite (wskR α ra)
+  (wskR α ra) ∘ (wskL ra β)
 
-  ≡⟨ transport (λ p → p ∘ (wskL ra β) ≡ (!(RU ra) ∘ α ∘ (RU ra)) ∘ (wskL ra β))
-               (Hcomp→compR1 α)
-               (refl ((wskR α ra) ∘ (wskL ra β)))⟩
-               
-  (!(RU ra) ∘ α ∘ (RU ra)) ∘ (wskL ra β)  -- rewrite (wskL ra β)
-  
-  ≡⟨  transport (λ q → (!(RU ra) ∘ α ∘ (RU ra)) ∘ q
-                       ≡
-                       (!(RU ra)  ∘ α ∘ (RU ra)) ∘ (!(LU ra) ∘ β ∘ (LU ra)))
-               (Hcomp→compL1 β)
-               (refl ((!(RU ra) ∘ α ∘ (RU ra)) ∘ (wskL ra β))) ⟩
+  ≡⟨ refl ((!(refl ra) ∘ α ∘ (refl ra)) ∘ (wskL ra β)) ⟩
 
-  (!(RU ra) ∘ α ∘ (RU ra)) ∘ (!(LU ra) ∘ β ∘ (LU ra)) -- rewrite (RU ra) to refl ra
-  
-  ≡⟨ transport (λ p → (! p ∘ α ∘ p) ∘ (!(LU ra) ∘ β ∘ (LU ra))
-                       ≡
-                       (!(refl ra) ∘ α ∘ (refl ra)) ∘ (!(LU ra) ∘ β ∘ (LU ra)))
-                (refl (refl (refl a)))
-                (refl ((!(RU ra) ∘ α ∘ (RU ra)) ∘ (!(LU ra) ∘ β ∘ (LU ra)))) ⟩
+  (!(refl ra) ∘ (α ∘ (refl ra))) ∘ (wskL ra β)
+    
+  ≡⟨  ap (λ p → ((!(refl ra) ∘ p) ∘ (wskL ra β))) (! (RU α)) ⟩
 
-  (!(refl ra) ∘ α ∘ (refl ra)) ∘ (!(LU ra) ∘ β ∘ (LU ra))
-  
-  ≡⟨ transport (λ q → (!(refl ra) ∘ α ∘ (refl ra)) ∘ (! q ∘ β ∘ q)
-                      ≡
-                      (!(refl ra) ∘ α ∘ (refl ra)) ∘ (!(refl ra) ∘ β ∘ (refl ra)))
-                (refl (refl (refl a)))
-                (refl ((!(refl ra) ∘ α ∘ (refl ra)) ∘ (!(LU ra) ∘ β ∘ (LU ra)))) ⟩
+  ((!(refl ra) ∘ α) ∘ (wskL ra β))
 
-  (!(refl ra) ∘ α ∘ (refl ra)) ∘ !(refl ra) ∘ (β ∘ (refl ra))
+  ≡⟨ ap (λ p → (p ∘ (wskL ra β))) (! (LU α)) ⟩
 
-  ≡⟨ transport (λ p → ((!(refl ra) ∘ α ∘ (refl ra)) ∘ !(refl ra) ∘ p)
-                      ≡
-                      ((!(refl ra) ∘ α ∘ (refl ra)) ∘ !(refl ra) ∘ β))
-                (RU β)
-                (refl ((!(refl ra) ∘ α ∘ (refl ra)) ∘ !(refl ra) ∘ β)) ⟩
+  (α ∘ (wskL ra β))
 
-  (!(refl ra) ∘ (α ∘ (refl ra))) ∘ ((!(refl ra)) ∘ β)
+  ≡⟨ refl (α ∘ (wskL ra β)) ⟩
 
-  ≡⟨ transport (λ p → (!(refl ra) ∘ p) ∘ ((!(refl ra)) ∘ β)
-                       ≡
-                       (!(refl ra) ∘ α) ∘ ((!(refl ra)) ∘ β))
-                (RU α)
-                (refl ((!(refl ra) ∘ α) ∘ ((!(refl ra)) ∘ β))) ⟩
+  (α ∘ (!(refl ra) ∘ β ∘ (refl ra)))
 
-  (!(refl ra) ∘ α) ∘ ((!(refl ra)) ∘ β)
+  ≡⟨ ap (λ p → (α ∘ (!(refl ra) ∘ p))) (! (RU β)) ⟩
 
-  ≡⟨ transport (λ p → ((!(refl ra) ∘ α) ∘ p)
-                       ≡
-                       ((!(refl ra) ∘ α) ∘ β))
-                (LU β)
-                (refl ((!(refl ra) ∘ α) ∘ β)) ⟩
+  (α ∘ (!(refl ra) ∘ β))
 
-  ((!(refl ra)) ∘ α) ∘ β
-
-  ≡⟨ transport (λ p → ((!(refl ra)) ∘ α) ∘ β
-                       ≡
-                       ((refl ra) ∘ α) ∘ β)
-                (refl (refl ra))
-                (refl (((!(refl ra)) ∘ α) ∘ β)) ⟩
-
-  ((refl ra) ∘ α) ∘ β
-
-  ≡⟨ ! (assocP (refl ra) α β) ⟩
-
-  (refl ra) ∘ α ∘ β
-
-  ≡⟨ ! (LU (α ∘ β)) ⟩
+  ≡⟨ ap (λ p → (α ∘ p)) (! (LU β)) ⟩
 
   α ∘ β ∎
   where ra = (refl a)
@@ -417,27 +366,56 @@ _⋆'_ : {A : Set}
        (p ∘ r) ≡ (q ∘ s)
 _⋆'_ {A} {a} {b} {c} {p} {q} {r} {s} α β = (wskL p β) ∘ (wskR α s)
 
-Hcomp'≡comp : {A : Set}
-              {a : A}
-              (α : 2-Path {A} a a (refl a) (refl a)) →
-              (β : 2-Path {A} a a (refl a) (refl a)) →
-              α ⋆' β ≡ β ∘ α
-Hcomp'≡comp {A} {a} α β = {!!}
+α⋆'β≡β∘α : {A : Set}
+           {a : A}
+           (α : 2-Path {A} a a (refl a) (refl a)) →
+           (β : 2-Path {A} a a (refl a) (refl a)) →
+           α ⋆' β ≡ β ∘ α
+α⋆'β≡β∘α {A} {a} α β =
+  α ⋆' β
 
+  ≡⟨ refl (α ⋆' β) ⟩
 
-Hcomp≡Hcomp' : {A : Set}
-               {a b c : A} 
-               {p q : 1-Path {A} a b}
-               {r s : 1-Path {A} b c}
-               (α : 2-Path {A} a b p q) → 
-               (β : 2-Path {A} b c r s) → 
-               α ⋆ β ≡ α ⋆' β
-Hcomp≡Hcomp' = {!!}
+  (wskL ra β) ∘ (!(refl ra) ∘ (α ∘ (refl ra)))
+
+  ≡⟨  ap (λ p → ((wskL ra β) ∘ (!(refl ra) ∘ p))) (! (RU α)) ⟩
+
+  ((wskL ra β) ∘ (!(refl ra) ∘ α))
+
+  ≡⟨ ap (λ p → ((wskL ra β) ∘ p)) (! (LU α)) ⟩
+
+  ((wskL ra β) ∘ α)
+
+  ≡⟨ refl ((wskL ra β) ∘ α) ⟩
+
+  ((!(refl ra) ∘ β ∘ (refl ra)) ∘ α)
+
+  ≡⟨ ap (λ p → ((!(refl ra) ∘ p) ∘ α)) (! (RU β)) ⟩
+
+  ((!(refl ra) ∘ β) ∘ α)
+
+  ≡⟨ ap (λ p → (p ∘ α)) (! (LU β)) ⟩
+  
+  β ∘ α ∎
+
+  where ra = (refl a)
+
+α⋆β≡α⋆'β : {A : Set}
+           {a : A}
+           (α : 2-Path {A} a a (refl a) (refl a)) →
+           (β : 2-Path {A} a a (refl a) (refl a)) → 
+           α ⋆ β ≡ α ⋆' β
+α⋆β≡α⋆'β {A} {a} α β =
+ α ⋆ β ≡⟨ {!!} ⟩
+ α ⋆' β ∎
+
+ where ra = (refl a)
+
 
 eckmann-hilton : {A : Set} {a : A} (α β : Ω² A {a}) → α ∘ β ≡ β ∘ α 
 eckmann-hilton {A} {a} α β =
-  α ∘ β ≡⟨ ! (Hcomp≡comp α β) ⟩
-  α ⋆ β ≡⟨ Hcomp≡Hcomp' α β ⟩
-  α ⋆' β ≡⟨ Hcomp'≡comp α β ⟩
+  α ∘ β ≡⟨ ! (α⋆β≡α∘β α β) ⟩
+  α ⋆ β ≡⟨ α⋆β≡α⋆'β α β ⟩
+  α ⋆' β ≡⟨ α⋆'β≡β∘α α β ⟩
   β ∘ α ∎
 ------------------------------------------------------------------------------
