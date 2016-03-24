@@ -1,5 +1,19 @@
 {-# OPTIONS --without-K #-}
 
+-- I've been spinning my wheels quite a bit on this proof.
+
+-- I've chatted with several people and feel confident my
+-- functions are properly defined, but I'm really struggling
+-- to see how to prove they are quasi-inverses (it has been a little
+-- reassuring, no one I have talked to has correctly defined
+-- the functions initially, hah).
+
+-- At the moment I'm not sure if I'm just missing something obvious in
+-- the proof, or if I'm simply going about the proof wrong. I've
+-- begun focusing on the eckmann-hilton proof and plan to return to this
+-- after that is done.
+
+
 module Circle where
 
 open import Level using (_⊔_)
@@ -338,6 +352,10 @@ Sqinv = mkqinv S'map
                  (refl south)
                  (transport S'toS≡id east (refl south))
                  ((refl (transport S'toS≡id east (refl south))))
+                 -- I've spent several hours exploring how I might
+                 -- prove this and I'm completely lost.
+                 -- I must be missing something obvious or I'm going about this
+                 -- totally wrong =\
                  (transport S'toS≡id west (refl south) ≡⟨ {!!} ⟩
                   transport S'toS≡id east (refl south) ∎))
                -- P(s) = (S'map ○ Smap) s ≡ id s

@@ -1,5 +1,16 @@
 {-# OPTIONS --without-K #-}
 
+-- After spending a couple days making no noteworthy progress
+-- on the Circle proof I switched to this one.
+
+-- After discovering some equational reasoning macros
+-- and going over the proof in the book I've been making
+-- a lot of progress on this proof! I think in the next day or so
+-- I should be done w/ this proof and I can try and figure out
+-- where I'm going wrong on the Circle proof.
+
+
+
 module EH where
 
 open import Level using (_⊔_)
@@ -289,10 +300,11 @@ Hcomp→compR1 : {A : Set}
               (α : 2-Path {A} a a (refl a) (refl a)) →
               (wskR α (refl a)) ≡ (! (RU (refl a))) ∘ α ∘ (RU (refl a))
 Hcomp→compR1 {A} {a} α = refl
-                          (pathInd (λ {x} {y} _ → x ≡ y) refl
-                           (pathInd (λ {x} {y} _ → (x₁ : a ≡ a) (x₂ : y ≡ x₁) → x ≡ x₁)
-                            (λ x x₁ → pathInd (λ {x₂} {y} _ → x₂ ≡ y) refl) α (refl a)
-                            (refl (refl a))))
+                           (pathInd (λ {x} {y} _ → x ≡ y) refl
+                            (pathInd (λ {x} {y} _ → (x₁ : a ≡ a) (x₂ : y ≡ x₁) → x ≡ x₁)
+                             (λ x x₁ → pathInd (λ {x₂} {y} _ → x₂ ≡ y) refl) α (refl a)
+                             (refl (refl a))))
+                          
 
 
 Hcomp→compL1 : {A : Set}
@@ -305,17 +317,12 @@ Hcomp→compL1 {A} {a} β = refl
                              (λ x x₁ → pathInd (λ {x₂} {y} _ → x₂ ≡ y) refl) β (refl a)
                              (refl (refl a))))
 
-RU≡refl : {A : Set}
-          (a : A) →
-          (RU (refl a)) ≡ (refl (refl a))
-RU≡refl = λ {A} a → refl (refl (refl a))
+inv-rra-elim : {A : Set}
+               (a : A) → 
+               (! (refl (refl a))) ≡ (refl (refl a))
+inv-rra-elim {A} a =  refl (refl (refl a))
 
-LU≡refl : {A : Set}
-          (a : A) →
-          (LU (refl a)) ≡ (refl (refl a))
-LU≡refl = λ {A} a → refl (refl (refl a))
-
-
+-- proof from pg 81
 Hcomp≡comp : {A : Set}
              {a : A}
              (α : 2-Path {A} a a (refl a) (refl a)) →
@@ -346,7 +353,7 @@ Hcomp≡comp {A} {a} α β =
   ≡⟨ transport (λ p → (! p ∘ α ∘ p) ∘ (!(LU ra) ∘ β ∘ (LU ra))
                        ≡
                        (!(refl ra) ∘ α ∘ (refl ra)) ∘ (!(LU ra) ∘ β ∘ (LU ra)))
-                (RU≡refl a)
+                (refl (refl (refl a)))
                 (refl ((!(RU ra) ∘ α ∘ (RU ra)) ∘ (!(LU ra) ∘ β ∘ (LU ra)))) ⟩
 
   (!(refl ra) ∘ α ∘ (refl ra)) ∘ (!(LU ra) ∘ β ∘ (LU ra))
@@ -354,12 +361,49 @@ Hcomp≡comp {A} {a} α β =
   ≡⟨ transport (λ q → (!(refl ra) ∘ α ∘ (refl ra)) ∘ (! q ∘ β ∘ q)
                       ≡
                       (!(refl ra) ∘ α ∘ (refl ra)) ∘ (!(refl ra) ∘ β ∘ (refl ra)))
-                (LU≡refl a)
+                (refl (refl (refl a)))
                 (refl ((!(refl ra) ∘ α ∘ (refl ra)) ∘ (!(LU ra) ∘ β ∘ (LU ra)))) ⟩
 
-  (!(refl ra) ∘ α ∘ (refl ra)) ∘ (!(refl ra) ∘ β ∘ (refl ra))
+  (!(refl ra) ∘ α ∘ (refl ra)) ∘ !(refl ra) ∘ (β ∘ (refl ra))
 
-  ≡⟨ {!!} ⟩ -- bookmark
+  ≡⟨ transport (λ p → ((!(refl ra) ∘ α ∘ (refl ra)) ∘ !(refl ra) ∘ p)
+                      ≡
+                      ((!(refl ra) ∘ α ∘ (refl ra)) ∘ !(refl ra) ∘ β))
+                (RU β)
+                (refl ((!(refl ra) ∘ α ∘ (refl ra)) ∘ !(refl ra) ∘ β)) ⟩
+
+  (!(refl ra) ∘ (α ∘ (refl ra))) ∘ ((!(refl ra)) ∘ β)
+
+  ≡⟨ transport (λ p → (!(refl ra) ∘ p) ∘ ((!(refl ra)) ∘ β)
+                       ≡
+                       (!(refl ra) ∘ α) ∘ ((!(refl ra)) ∘ β))
+                (RU α)
+                (refl ((!(refl ra) ∘ α) ∘ ((!(refl ra)) ∘ β))) ⟩
+
+  (!(refl ra) ∘ α) ∘ ((!(refl ra)) ∘ β)
+
+  ≡⟨ transport (λ p → ((!(refl ra) ∘ α) ∘ p)
+                       ≡
+                       ((!(refl ra) ∘ α) ∘ β))
+                (LU β)
+                (refl ((!(refl ra) ∘ α) ∘ β)) ⟩
+
+  ((!(refl ra)) ∘ α) ∘ β
+
+  ≡⟨ transport (λ p → ((!(refl ra)) ∘ α) ∘ β
+                       ≡
+                       ((refl ra) ∘ α) ∘ β)
+                (refl (refl ra))
+                (refl (((!(refl ra)) ∘ α) ∘ β)) ⟩
+
+  ((refl ra) ∘ α) ∘ β
+
+  ≡⟨ ! (assocP (refl ra) α β) ⟩
+
+  (refl ra) ∘ α ∘ β
+
+  ≡⟨ ! (LU (α ∘ β)) ⟩
+
   α ∘ β ∎
   where ra = (refl a)
 
@@ -390,7 +434,10 @@ Hcomp≡Hcomp' : {A : Set}
                α ⋆ β ≡ α ⋆' β
 Hcomp≡Hcomp' = {!!}
 
-postulate
-  eckmann-hilton : {A : Set} {a : A} (α β : Ω² A {a}) → α ∘ β ≡ β ∘ α 
---eckmann-hilton {A} {a} α β = {!!}
+eckmann-hilton : {A : Set} {a : A} (α β : Ω² A {a}) → α ∘ β ≡ β ∘ α 
+eckmann-hilton {A} {a} α β =
+  α ∘ β ≡⟨ ! (Hcomp≡comp α β) ⟩
+  α ⋆ β ≡⟨ Hcomp≡Hcomp' α β ⟩
+  α ⋆' β ≡⟨ Hcomp'≡comp α β ⟩
+  β ∘ α ∎
 ------------------------------------------------------------------------------
