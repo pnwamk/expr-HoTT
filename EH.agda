@@ -1,14 +1,8 @@
 {-# OPTIONS --without-K #-}
 
--- After spending a couple days making no noteworthy progress
--- on the Circle proof I switched to this one.
-
--- After discovering some equational reasoning macros
--- and going over the proof in the book I've been making
--- a lot of progress on this proof! I think in the next day or so
--- I should be done w/ this proof and I can try and figure out
--- where I'm going wrong on the Circle proof.
-
+-- Finished 6pm Th, March 24! yay!
+-- Bit thanks to tzaikin for posting his work online (some of his macros
+-- were essential for this proof for me) and to the code we saw in class today.
 
 
 module EH where
@@ -400,22 +394,43 @@ _⋆'_ {A} {a} {b} {c} {p} {q} {r} {s} α β = (wskL p β) ∘ (wskR α s)
 
   where ra = (refl a)
 
+-- yuck lots of nested induction
 α⋆β≡α⋆'β : {A : Set}
            {a : A}
            (α : 2-Path {A} a a (refl a) (refl a)) →
            (β : 2-Path {A} a a (refl a) (refl a)) → 
            α ⋆ β ≡ α ⋆' β
 α⋆β≡α⋆'β {A} {a} α β =
- α ⋆ β ≡⟨ {!!} ⟩
- α ⋆' β ∎
-
- where ra = (refl a)
-
+  -- induction on α
+  pathInd
+    (λ α → α ⋆ β ≡ α ⋆' β)
+    (λ p →
+       -- induction on β
+       pathInd
+         (λ β → refl p ⋆ β ≡ refl p ⋆' β)
+         (λ q →
+            -- induction on p
+            (pathInd
+              (λ {a} {b} p → (c : A) → (q : b ≡ c) →
+                 ((refl p ⋆ refl q) ≡ (refl p ⋆' refl q)))
+                      (λ a d q →
+                         -- induction on q
+                         pathInd
+                           (λ {a} {d} r →
+                              ((refl (refl a) ⋆ refl r) ≡ (refl (refl a) ⋆' refl r)))
+                           (λ a → refl (refl (refl a)))
+                         q)
+               p a q))
+             β)
+           α
 
 eckmann-hilton : {A : Set} {a : A} (α β : Ω² A {a}) → α ∘ β ≡ β ∘ α 
 eckmann-hilton {A} {a} α β =
-  α ∘ β ≡⟨ ! (α⋆β≡α∘β α β) ⟩
-  α ⋆ β ≡⟨ α⋆β≡α⋆'β α β ⟩
-  α ⋆' β ≡⟨ α⋆'β≡β∘α α β ⟩
+  α ∘ β
+  ≡⟨ ! (α⋆β≡α∘β α β) ⟩
+  α ⋆ β
+  ≡⟨ α⋆β≡α⋆'β α β ⟩
+  α ⋆' β
+  ≡⟨ α⋆'β≡β∘α α β ⟩
   β ∘ α ∎
 ------------------------------------------------------------------------------
